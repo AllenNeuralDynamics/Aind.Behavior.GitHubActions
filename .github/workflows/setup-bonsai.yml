@@ -1,0 +1,50 @@
+# .github/workflows/setup-bonsai.yml
+name: Setup Bonsai
+
+on:
+  workflow_call:
+    inputs:
+      bonsai-working-directory:
+        required: false
+        type: string
+        default: 'bonsai'
+    outputs:
+      bonsai-env-artifact:
+        description: 'Path to the bonsai artifact'
+        value: ${{ jobs.setup-bonsai.outputs.bonsai-env-artifact }}
+
+jobs:
+  setup-bonsai:
+    outputs:
+      bonsai-env-artifact: ${{ steps.set-artifact-output.outputs.artifact-path }}
+    runs-on: windows-latest
+    name: Setup Bonsai
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET Core SDK
+        uses: actions/setup-dotnet@v4.0.0
+        with:
+          dotnet-version: 8.x
+
+      - name: Restore dotnet tools
+        run: dotnet tool restore
+
+      - name: Setup Bonsai
+        working-directory: ${{ inputs.bonsai-working-directory }}
+        run: .\Setup.ps1
+
+      - id: upload-bonsai-files
+        name: Upload Bonsai Files
+        uses: actions/upload-artifact@v3
+        with:
+          name: bonsai-environment
+          path: ${{ inputs.bonsai-working-directory }}
+
+      - id: set-artifact-output
+        shell: pwsh
+        name: Set Bonsai Output
+        run: |
+          $env:artifactPath = "${{ inputs.bonsai-working-directory }}"
+          echo "artifact-path=$env:artifactPath" >> $env:GITHUB_ENV
+          Write-Output "::set-output name=artifact-path::$env:artifactPath"

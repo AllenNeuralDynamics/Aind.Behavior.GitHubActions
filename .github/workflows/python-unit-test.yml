@@ -1,0 +1,78 @@
+# .github/workflows/python-unit-test.yml
+name: Run python unit tests
+
+on:
+  workflow_call:
+    inputs:
+      runs-on:
+        type: string
+        description: 'The type of runner that the job will run on'
+        required: false
+        default: 'windows-latest'
+      python-version-path:
+        type: string
+        description: 'The path to the python version file'
+        required: false
+        default: ".python-version"
+      run-coverage:
+        type: boolean
+        description: 'Whether to run test coverage'
+        required: false
+        default: false
+
+jobs:
+  setup-matrix:
+    runs-on: ${{ inputs.runs-on }}
+    outputs:
+      python-versions: ${{ steps.set_python_versions_matrix.outputs.python-versions }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/checkout@v4
+        with:
+          repository: AllenNeuralDynamics/Aind.Behavior.GitHubActions
+          path: action-repo
+
+      - uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+
+      - name: Run Python Script
+        id: set_python_versions_matrix
+        shell: bash
+        run: |
+          python_version=$(uv run python action-repo/.github/workflows/get_python_version.py ${{ inputs.python-version-path }})
+          echo "python-versions=$python_version" >> $GITHUB_OUTPUT
+
+  tests:
+    needs: setup-matrix
+    runs-on: ${{ inputs.runs-on }}
+    strategy:
+      matrix:
+        python-version: ${{ fromJSON(needs['setup-matrix'].outputs['python-versions']).python-version }}
+      fail-fast: false
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+
+      - name: Set up Python ${{ matrix.python-version }}
+        run: uv python install ${{ matrix.python-version }}
+
+      - name: Check if uv.lock is up-to-date
+        run: uv lock --check
+
+      - name: Install dependencies
+        run: uv sync --extra dev
+
+      - name: Run tests
+        shell: bash
+        run: |
+          if [ "${{ inputs.run-coverage }}" = "true" ]; then
+            uv run -m coverage run -m unittest
+            uv run -m coverage report
+          else
+            uv run -m unittest
+          fi

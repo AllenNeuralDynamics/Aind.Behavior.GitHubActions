@@ -1,0 +1,44 @@
+# .github/workflows/python-linting.yml
+name: Run python linting
+
+on:
+  workflow_call:
+    inputs:
+      runs-on:
+        type: string
+        description: 'The type of runner that the job will run on'
+        required: false
+        default: 'windows-latest'
+      run-coverage:
+        type: boolean
+        description: 'Whether to run test coverage'
+        required: false
+        default: false
+
+jobs:
+  linters:
+    runs-on: ${{ inputs.runs-on }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        run: uv python install
+
+      - name: Check if uv.lock is up-to-date
+        run: uv lock --check
+
+      - name: Install dependencies
+        run: uv sync --extra dev
+
+      - name: Run ruff format
+        run: uv run ruff format .
+
+      - name: Run ruff check
+        run: uv run ruff check .
+
+      - name: Run codespell
+        run: uv run codespell .
