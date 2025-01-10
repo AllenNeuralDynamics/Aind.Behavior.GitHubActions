@@ -9,6 +9,11 @@ on:
         description: 'Whether to publish the package to pipy'
         required: false
         default: false
+    secrets:
+      SERVICE_TOKEN:
+        required: true
+      AIND_PYPI_TOKEN:
+        required: true
 
 jobs:
   tag:
