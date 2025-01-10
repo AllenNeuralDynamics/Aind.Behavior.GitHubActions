@@ -7,8 +7,7 @@ on:
       publish:
         type: boolean
         description: 'Whether to publish the package to pipy'
-        required: false
-        default: false
+        required: true
     secrets:
       SERVICE_TOKEN:
         required: true
@@ -59,7 +58,7 @@ jobs:
 
   publish:
     needs: tag
-    if: inputs.publish == 'true'
+    if: ${{ inputs.publish }} == true
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
