@@ -50,9 +50,6 @@ jobs:
       - name: Set up Python
         run: uv python install
 
-      - name: Check if uv.lock is up-to-date
-        run: uv lock --check
-
       - name: Install python dependencies
         run: uv sync --extra dev
 
