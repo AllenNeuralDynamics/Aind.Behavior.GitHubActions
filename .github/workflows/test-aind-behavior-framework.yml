@@ -24,10 +24,15 @@ on:
         description: 'Whether to run schema regeneration'
         required: false
         default: false
+      runs-on:
+        type: string
+        description: 'The type of runner that the job will run on'
+        required: false
+        default: 'windows-latest'
 
 jobs:
   tests:
-    runs-on: windows-latest
+    runs-on: ${{ inputs.runs-on }}
     steps:
       - uses: actions/checkout@v4
 
